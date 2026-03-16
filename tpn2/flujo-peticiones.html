@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flujo de Peticiones - Servidor Simple</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 20px;
+            color: #e0e0e0;
+        }
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00b4d8, #e94560);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        h2 {
+            font-size: 1rem;
+            color: #aaa;
+            margin-bottom: 30px;
+            font-weight: 400;
+        }
+        .diagram-container {
+            background: #1a1a2e;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            border: 1px solid #333;
+            width: 100%;
+            max-width: 1100px;
+            overflow-x: auto;
+        }
+        .diagram-container h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #00b4d8;
+            font-size: 1.2rem;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+        .legend {
+            background: #1a1a2e;
+            border-radius: 16px;
+            padding: 24px 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            border: 1px solid #333;
+            max-width: 700px;
+            width: 100%;
+        }
+        .legend h3 { color: #e94560; margin-bottom: 14px; }
+        .legend ul { list-style: none; padding: 0; }
+        .legend li {
+            padding: 6px 0;
+            border-bottom: 1px solid #2a2a3e;
+            font-size: 0.95rem;
+        }
+        .legend li:last-child { border-bottom: none; }
+        .legend code {
+            background: #302b63;
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #00b4d8;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Flujo de Peticiones HTTP</h1>
+    <h2>servidorsimple.mjs — Express + Mongoose + MongoDB Atlas</h2>
+
+    <!-- DIAGRAMA 1: Flujo general Request/Response -->
+    <div class="diagram-container">
+        <h3>Flujo General: Cliente ↔ API ↔ Base de Datos</h3>
+        <div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant C as 👤 Cliente<br/>(Browser / Postman)
+    participant API as ⚙️ Express API<br/>(Puerto 3000)
+    participant FN as 📦 Funciones<br/>(obtenerTodos / obtenerPorNombre)
+    participant DB as 🗄️ MongoDB Atlas<br/>(dbsuperheroes)
+
+    Note over C,DB: 🚀 Inicio: connectDB() establece conexión con MongoDB Atlas
+
+    rect rgb(27, 67, 50)
+        Note over C,DB: GET /superheroes — Obtener todos los héroes
+        C->>+API: GET /superheroes
+        API->>+FN: obtenerTodos()
+        FN->>+DB: SuperHero.find()
+        DB-->>-FN: 📄 Array de documentos
+        FN-->>-API: heroes[]
+        API-->>-C: ✅ 200 JSON con todos los héroes
+    end
+
+    rect rgb(61, 0, 102)
+        Note over C,DB: GET /superheroes/:nombre — Buscar héroe por nombre
+        C->>+API: GET /superheroes/Superman
+        API->>+FN: obtenerPorNombre("Superman")
+        FN->>+DB: SuperHero.findOne({nombreSuperHeroe})
+        DB-->>-FN: 📄 Documento o null
+        FN-->>-API: hero o null
+
+        alt Héroe encontrado ✅
+            API-->>C: 200 JSON con el héroe
+        else Héroe NO encontrado ⚠️
+            API-->>C: 404 "Superhéroe no encontrado"
+        end
+    end
+
+    rect rgb(106, 4, 15)
+        Note over C,DB: ❌ Escenario de Error
+        C->>+API: GET /superheroes
+        API->>+FN: obtenerTodos()
+        FN->>+DB: SuperHero.find()
+        DB--x-FN: 💥 Error de conexión
+        FN-->>-API: throw Error
+        API-->>-C: 500 "Error al obtener los superhéroes"
+    end
+        </div>
+    </div>
+
+    <!-- DIAGRAMA 2: Flujo de arranque -->
+    <div class="diagram-container">
+        <h3>Flujo de Arranque del Servidor</h3>
+        <div class="mermaid">
+flowchart LR
+    A["🟢 node servidorsimple.mjs"] --> B["📦 Importar<br/>express + mongoose"]
+    B --> C["⚙️ Crear app Express<br/>app.use(express.json())"]
+    C --> D["🔌 connectDB()<br/>mongoose.connect()"]
+    D --> E{{"✅ ¿Conexión<br/>exitosa?"}}
+    E -- Sí --> F["🎧 app.listen(3000)<br/>Servidor escuchando"]
+    E -- No --> G["🔴 Error<br/>console.error()"]
+    F --> H["🌐 Rutas listas<br/>GET /superheroes<br/>GET /superheroes/:nombre"]
+
+    style A fill:#2d6a4f,stroke:#52b788,color:#fff
+    style D fill:#0f3460,stroke:#00b4d8,color:#fff
+    style F fill:#1b4332,stroke:#40916c,color:#fff
+    style G fill:#6a040f,stroke:#d00000,color:#fff
+    style H fill:#533483,stroke:#9d4edd,color:#fff
+        </div>
+    </div>
+
+    <!-- DIAGRAMA 3: Estructura del modelo -->
+    <div class="diagram-container">
+        <h3>Modelo de Datos — SuperHero Schema</h3>
+        <div class="mermaid">
+classDiagram
+    class SuperHero {
+        +String nombreSuperHeroe ⭐ required
+        +String nombreReal ⭐ required
+        +Number edad  min 0
+        +String planetaOrigen  default Desconocido
+        +String debilidad
+        +String[] poderes
+        +String[] aliados
+        +String[] enemigos
+        +Date createdAt  default now
+        +String creador
+    }
+    class MongoDB_Atlas {
+        ☁️ Cluster0
+        📁 db: dbsuperheroes
+        📄 collection: dbsuperheroes
+    }
+    SuperHero --> MongoDB_Atlas : se almacena en
+        </div>
+    </div>
+
+    <div class="legend">
+        <h3>📝 Resumen de Endpoints</h3>
+        <ul>
+            <li>📌 <code>GET /superheroes</code> → Devuelve todos los superhéroes de la base de datos</li>
+            <li>📌 <code>GET /superheroes/:nombre</code> → Busca un superhéroe por su nombre exacto</li>
+            <li>✅ <code>200</code> → Respuesta exitosa con datos en JSON</li>
+            <li>⚠️ <code>404</code> → Superhéroe no encontrado</li>
+            <li>❌ <code>500</code> → Error interno del servidor</li>
+        </ul>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            themeVariables: {
+                primaryColor: '#302b63',
+                primaryTextColor: '#e0e0e0',
+                primaryBorderColor: '#00b4d8',
+                lineColor: '#e94560',
+                secondaryColor: '#1a1a2e',
+                tertiaryColor: '#533483',
+                noteBkgColor: '#1a1a2e',
+                noteTextColor: '#e0e0e0',
+                noteBorderColor: '#00b4d8',
+                actorBkg: '#302b63',
+                actorTextColor: '#fff',
+                actorBorder: '#00b4d8',
+                signalColor: '#e0e0e0',
+                signalTextColor: '#e0e0e0',
+                sequenceNumberColor: '#fff'
+            },
+            sequence: {
+                actorMargin: 80,
+                messageMargin: 40,
+                boxMargin: 10,
+                noteMargin: 10,
+                mirrorActors: false,
+                useMaxWidth: false
+            },
+            flowchart: {
+                useMaxWidth: false,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</body>
+</html>

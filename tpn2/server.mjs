@@ -1,12 +1,16 @@
 import express from "express";
 import mongoose from "mongoose";
+import dns from "dns";
+
+// Forzar servidores DNS: Google y Cloudflare
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
 // ========================
 // Conexión a MongoDB
 // ========================
 async function connectDB() {
   try {
     await mongoose.connect(
-// La cadena de conexión a MongoDB Atlas, que incluye el nombre de usuario, la contraseña, el clúster(o servidor) y el nombre de la base de datos.
+      // La cadena de conexión a MongoDB Atlas, que incluye el nombre de usuario, la contraseña, el clúster(o servidor) y el nombre de la base de datos.
       "mongodb+srv://augustodelcampo97:Nodotecnologico@cluster0.nxsrd.mongodb.net/dbsuperheroes",
     );
     console.log("Conexión exitosa a MongoDB");
