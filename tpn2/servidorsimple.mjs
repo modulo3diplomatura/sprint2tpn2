@@ -49,6 +49,16 @@ async function obtenerPorNombre(nombreSuperHeroe) {
 async function buscarPorPlaneta(planetaOrigen) {
   return await SuperHero.find({ planetaOrigen });
 }
+async function obtenerMayoresDe30() {
+  // el operador $gt se utiliza para buscar documentos donde el valor de la propiedad "edad" sea mayor que 30.
+  return await SuperHero.find({ edad: { $gt: 30 } });
+}
+async function buscarPorAtributo(atributo, valor) {
+  // se crea un filtro dinámico utilizando la sintaxis de corchetes para acceder a
+  // la propiedad del objeto y se utiliza el valor proporcionado para buscar en la base de datos.
+  const filtro = { [atributo]: valor };
+  return await SuperHero.find(filtro);
+}
 
 // Petición sin parámetros ni query
 // Se hace la petición a la ruta "/superheroes" y se obtiene la lista de todos los superhéroes
@@ -74,11 +84,22 @@ app.get("/superheroes/buscar", async (req, res) => {
 // Se hace la petición a la ruta "/superheroes/:nombre" y se obtiene un superhéroe específico
 // basado en su nombre utilizando la función obtenerPorNombre()
 // y se devuelve como respuesta en formato JSON.
+app.get("/superheroes/mayores30", async (req, res) => {
+  const heroes = await obtenerMayoresDe30();
+  res.json(heroes);
+});
+
 app.get("/superheroes/:nombre", async (req, res) => {
   const nombre = req.params.nombre;
   console.log("nombre", nombre);
   const hero = await obtenerPorNombre(nombre);
   res.json(hero);
+});
+
+app.get("/superheroes/:atributo/:valor", async (req, res) => {
+  const { atributo, valor } = req.params;
+  const heroes = await buscarPorAtributo(atributo, valor);
+  res.json(heroes);
 });
 
 connectDB().then(() => {
