@@ -49,16 +49,6 @@ async function obtenerPorNombre(nombreSuperHeroe) {
 async function buscarPorPlaneta(planetaOrigen) {
   return await SuperHero.find({ planetaOrigen });
 }
-async function obtenerMenoresDe30() {
-  // el operador $gt se utiliza para buscar documentos donde el valor de la propiedad "edad" sea mayor que 30.
-  return await SuperHero.find({ edad: { $lt: 30 } });
-}
-async function buscarPorAtributo(atributo, valor) {
-  // se crea un filtro dinámico utilizando la sintaxis de corchetes para acceder a
-  // la propiedad del objeto y se utiliza el valor proporcionado para buscar en la base de datos.
-  const filtro = { [atributo]: valor };
-  return await SuperHero.find(filtro);
-}
 
 // Petición sin parámetros ni query
 // Se hace la petición a la ruta "/superheroes" y se obtiene la lista de todos los superhéroes
@@ -81,10 +71,7 @@ app.get("/superheroes/buscar", async (req, res) => {
   res.json(heroes);
 });
 
-app.get("/superheroes/menoresa30", async (req, res) => {
-  const heroes = await obtenerMenoresDe30();
-  res.json(heroes);
-});
+
 // Se hace la petición a la ruta "/superheroes/:nombre" y se obtiene un superhéroe específico
 // basado en su nombre utilizando la función obtenerPorNombre()
 // y se devuelve como respuesta en formato JSON.
@@ -97,12 +84,7 @@ app.get("/superheroes/:nombre", async (req, res) => {
 });
 // filtro dinamico con dos parametros dinamicos en la URL: atributo y valor.
 //  Se extraen utilizando req.params.atributo y req.params.valor
-app.get("/superheroes/:atributo/:valor", async (req, res) => {
-//vamos a extraer los dos parametros dinamicos de la URL utilizando req.params.atributo y req.params.valor
-  const { atributo, valor } = req.params;
-  const heroes = await buscarPorAtributo(atributo, valor);
-  res.json(heroes);
-});
+
 
 connectDB().then(() => {
   app.listen(PORT, () => {
